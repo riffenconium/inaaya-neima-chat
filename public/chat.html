@@ -21,6 +21,18 @@
       </form>
     </header>
 
+    <div class="admin-toolbar" id="admin-toolbar" style="display:none">
+      <div class="admin-left">
+        <span id="selected-count">0 selected</span>
+      </div>
+      <div class="admin-actions">
+        <button class="admin-btn" id="btn-select-all">Select All</button>
+        <button class="admin-btn" id="btn-deselect-all">Deselect All</button>
+        <button class="admin-btn danger" id="btn-delete-selected" disabled>Delete Selected</button>
+        <button class="admin-btn danger" id="btn-delete-all">Delete All</button>
+      </div>
+    </div>
+
     <div class="messages" id="messages">
       <div class="loading">Loading messages...</div>
     </div>

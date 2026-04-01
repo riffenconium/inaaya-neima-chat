@@ -506,6 +506,107 @@ html, body {
   border-radius: 3px;
 }
 
+/* ========== ADMIN ========== */
+
+.admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #2d2d3f;
+  flex-shrink: 0;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-left {
+  color: #ccc;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-btn {
+  padding: 6px 14px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #3a3a50;
+  color: #ddd;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-btn:hover {
+  background: #4a4a60;
+}
+
+.admin-btn.danger {
+  border-color: #c0392b;
+  color: #e74c3c;
+}
+
+.admin-btn.danger:hover {
+  background: #c0392b;
+  color: #fff;
+}
+
+.admin-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.msg-checkbox {
+  position: absolute;
+  top: 8px;
+  left: -28px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.message {
+  position: relative;
+}
+
+.message.selected .bubble {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.sender-name {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  opacity: 0.7;
+}
+
+.message.sent .sender-name {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.message.received .sender-name {
+  color: var(--primary);
+}
+
+/* Admin view: offset messages for checkbox space */
+.admin-toolbar ~ .messages .message {
+  margin-left: 32px;
+}
+
+.admin-toolbar ~ .messages .message.sent {
+  margin-right: 8px;
+}
+
 /* ========== DRAWING ========== */
 
 .draw-overlay {

@@ -8,6 +8,8 @@
   let recordingTimer = null;
   let recordingSeconds = 0;
   let pendingFile = null;
+  let isAdmin = false;
+  let selectedIds = new Set();
 
   const messagesEl = document.getElementById('messages');
   const input = document.getElementById('message-input');
@@ -30,9 +32,18 @@
     .then((r) => r.json())
     .then((data) => {
       currentUser = data.user;
-      otherUser = currentUser === 'Inaaya' ? 'Neima' : 'Inaaya';
-      chatWithEl.textContent = otherUser;
-      avatarEl.textContent = otherUser[0];
+      isAdmin = data.isAdmin;
+      if (isAdmin) {
+        chatWithEl.textContent = 'Admin Panel';
+        avatarEl.textContent = 'A';
+        document.getElementById('admin-toolbar').style.display = 'flex';
+        document.querySelector('.input-area').style.display = 'none';
+        initAdmin();
+      } else {
+        otherUser = currentUser === 'Inaaya' ? 'Neima' : 'Inaaya';
+        chatWithEl.textContent = otherUser;
+        avatarEl.textContent = otherUser[0];
+      }
       loadMessages();
     });
 
@@ -233,9 +244,8 @@
 
   // Socket events
   socket.on('new-message', (msg) => {
-    const shouldScroll = isNearBottom();
     appendMessage(msg, true);
-    if (shouldScroll || msg.sender === currentUser) scrollToBottom();
+    scrollToBottom();
   });
 
   socket.on('online-users', (users) => {
@@ -258,8 +268,9 @@
   // Render message
   function appendMessage(msg, animate) {
     const div = document.createElement('div');
-    const isSent = msg.sender === currentUser;
+    const isSent = isAdmin ? msg.sender === 'Inaaya' : msg.sender === currentUser;
     div.className = `message ${isSent ? 'sent' : 'received'}`;
+    div.dataset.id = msg.id;
     if (!animate) div.style.animation = 'none';
 
     let content = '';
@@ -284,10 +295,27 @@
         content = escapeHtml(msg.content);
     }
 
+    const senderLabel = isAdmin ? `<span class="sender-name">${msg.sender}</span>` : '';
+
     div.innerHTML = `
-      <div class="bubble">${content}</div>
+      ${isAdmin ? '<input type="checkbox" class="msg-checkbox">' : ''}
+      <div class="bubble">${senderLabel}${content}</div>
       <span class="time">${formatTime(msg.created_at)}</span>
     `;
+
+    if (isAdmin) {
+      const cb = div.querySelector('.msg-checkbox');
+      cb.addEventListener('change', () => {
+        if (cb.checked) {
+          selectedIds.add(msg.id);
+          div.classList.add('selected');
+        } else {
+          selectedIds.delete(msg.id);
+          div.classList.remove('selected');
+        }
+        updateSelectedCount();
+      });
+    }
 
     messagesEl.appendChild(div);
   }
@@ -336,6 +364,72 @@
       100
     );
   }
+
+  // ========== ADMIN ==========
+
+  function updateSelectedCount() {
+    const countEl = document.getElementById('selected-count');
+    if (countEl) countEl.textContent = selectedIds.size + ' selected';
+    const delBtn = document.getElementById('btn-delete-selected');
+    if (delBtn) delBtn.disabled = selectedIds.size === 0;
+  }
+
+  function initAdmin() {
+    document.getElementById('btn-select-all').addEventListener('click', () => {
+      document.querySelectorAll('.msg-checkbox').forEach((cb) => {
+        cb.checked = true;
+        const msgDiv = cb.closest('.message');
+        msgDiv.classList.add('selected');
+        selectedIds.add(parseInt(msgDiv.dataset.id));
+      });
+      updateSelectedCount();
+    });
+
+    document.getElementById('btn-deselect-all').addEventListener('click', () => {
+      document.querySelectorAll('.msg-checkbox').forEach((cb) => {
+        cb.checked = false;
+        cb.closest('.message').classList.remove('selected');
+      });
+      selectedIds.clear();
+      updateSelectedCount();
+    });
+
+    document.getElementById('btn-delete-selected').addEventListener('click', () => {
+      if (selectedIds.size === 0) return;
+      if (!confirm(`Delete ${selectedIds.size} message(s)?`)) return;
+      fetch('/api/messages/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      }).then(() => {
+        selectedIds.clear();
+        updateSelectedCount();
+      });
+    });
+
+    document.getElementById('btn-delete-all').addEventListener('click', () => {
+      if (!confirm('Delete ALL messages? This cannot be undone.')) return;
+      fetch('/api/messages/delete-all', { method: 'POST' }).then(() => {
+        selectedIds.clear();
+        updateSelectedCount();
+      });
+    });
+  }
+
+  socket.on('messages-deleted', (ids) => {
+    ids.forEach((id) => {
+      const el = document.querySelector(`.message[data-id="${id}"]`);
+      if (el) el.remove();
+      selectedIds.delete(id);
+    });
+    updateSelectedCount();
+  });
+
+  socket.on('messages-cleared', () => {
+    messagesEl.innerHTML = '';
+    selectedIds.clear();
+    updateSelectedCount();
+  });
 
   // ========== DRAWING ==========
 

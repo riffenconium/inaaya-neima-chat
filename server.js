@@ -35,6 +35,7 @@ db.exec(`
 const USERS = {
   Inaaya: 'Inaaya786',
   Neima: 'Neima786',
+  admin: 'admin786786',
 };
 
 // Session middleware
@@ -94,7 +95,7 @@ app.get('/chat', requireAuth, (_req, res) => {
 });
 
 app.get('/api/me', requireAuth, (req, res) => {
-  res.json({ user: req.session.user });
+  res.json({ user: req.session.user, isAdmin: req.session.user === 'admin' });
 });
 
 app.get('/api/messages', requireAuth, (_req, res) => {
@@ -116,6 +117,37 @@ app.post('/api/upload', requireAuth, upload.single('file'), (req, res) => {
     mimetype: req.file.mimetype,
     type,
   });
+});
+
+// Admin: delete selected messages
+app.post('/api/messages/delete', requireAuth, (req, res) => {
+  if (req.session.user !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'No ids' });
+
+  const placeholders = ids.map(() => '?').join(',');
+  const rows = db.prepare(`SELECT filename FROM messages WHERE id IN (${placeholders}) AND filename IS NOT NULL`).all(...ids);
+  rows.forEach((r) => {
+    const fp = path.join(UPLOADS_DIR, r.filename);
+    if (fs.existsSync(fp)) fs.unlinkSync(fp);
+  });
+  db.prepare(`DELETE FROM messages WHERE id IN (${placeholders})`).run(...ids);
+  io.emit('messages-deleted', ids);
+  res.json({ deleted: ids.length });
+});
+
+// Admin: delete all messages
+app.post('/api/messages/delete-all', requireAuth, (_req, res) => {
+  if (_req.session.user !== 'admin') return res.status(403).json({ error: 'Forbidden' });
+
+  const rows = db.prepare('SELECT filename FROM messages WHERE filename IS NOT NULL').all();
+  rows.forEach((r) => {
+    const fp = path.join(UPLOADS_DIR, r.filename);
+    if (fs.existsSync(fp)) fs.unlinkSync(fp);
+  });
+  db.prepare('DELETE FROM messages').run();
+  io.emit('messages-cleared');
+  res.json({ deleted: 'all' });
 });
 
 app.post('/logout', (req, res) => {
