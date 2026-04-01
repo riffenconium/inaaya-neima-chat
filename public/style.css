@@ -506,6 +506,154 @@ html, body {
   border-radius: 3px;
 }
 
+/* ========== DRAWING ========== */
+
+.draw-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #1a1a2e;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+}
+
+.draw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #1a1a2e;
+  flex-shrink: 0;
+}
+
+.draw-close {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+}
+
+.draw-title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.draw-send {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.draw-send:hover {
+  background: var(--primary-dark);
+}
+
+.draw-canvas-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #111;
+}
+
+.draw-canvas-wrap canvas {
+  background: #fff;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.draw-toolbar {
+  background: #1a1a2e;
+  padding: 12px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.draw-colors {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.color-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.color-btn:hover {
+  transform: scale(1.1);
+}
+
+.color-btn.active {
+  border-color: #fff;
+  transform: scale(1.15);
+}
+
+.color-btn[data-color="#ffffff"] {
+  border: 3px solid #555;
+}
+
+.color-btn[data-color="#ffffff"].active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px #555;
+}
+
+.draw-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  color: #fff;
+}
+
+.draw-size input[type="range"] {
+  width: 160px;
+  accent-color: var(--primary);
+}
+
+.draw-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.draw-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.draw-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .chat-container {

@@ -316,6 +316,168 @@
     );
   }
 
+  // ========== DRAWING ==========
+
+  const drawOverlay = document.getElementById('draw-overlay');
+  const drawCanvas = document.getElementById('draw-canvas');
+  const drawCanvasWrap = document.getElementById('draw-canvas-wrap');
+  const drawBtn = document.getElementById('draw-btn');
+  const drawClose = document.getElementById('draw-close');
+  const drawSend = document.getElementById('draw-send');
+  const drawUndo = document.getElementById('draw-undo');
+  const drawClear = document.getElementById('draw-clear');
+  const brushSize = document.getElementById('brush-size');
+  const colorBtns = document.querySelectorAll('.color-btn');
+  const ctx = drawCanvas.getContext('2d');
+
+  let drawing = false;
+  let drawColor = '#1a1a2e';
+  let drawSize = 4;
+  let drawHistory = []; // saved canvas states for undo
+  let lastPoint = null;
+
+  function openDrawing() {
+    drawOverlay.style.display = 'flex';
+    resizeCanvas();
+    clearCanvas();
+    drawHistory = [];
+  }
+
+  function closeDrawing() {
+    drawOverlay.style.display = 'none';
+  }
+
+  function resizeCanvas() {
+    const rect = drawCanvasWrap.getBoundingClientRect();
+    // Use a fixed aspect ratio canvas that fits the container
+    const w = Math.min(rect.width - 8, 600);
+    const h = Math.min(rect.height - 8, 600);
+    drawCanvas.width = w;
+    drawCanvas.height = h;
+    drawCanvas.style.width = w + 'px';
+    drawCanvas.style.height = h + 'px';
+  }
+
+  function clearCanvas() {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
+  }
+
+  function saveState() {
+    if (drawHistory.length > 50) drawHistory.shift();
+    drawHistory.push(drawCanvas.toDataURL());
+  }
+
+  function undo() {
+    if (drawHistory.length === 0) return;
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = drawHistory.pop();
+  }
+
+  function getCanvasPos(e) {
+    const rect = drawCanvas.getBoundingClientRect();
+    const touch = e.touches ? e.touches[0] : e;
+    return {
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top,
+    };
+  }
+
+  function startDraw(e) {
+    e.preventDefault();
+    drawing = true;
+    saveState();
+    lastPoint = getCanvasPos(e);
+    // Draw a dot for single taps
+    ctx.beginPath();
+    ctx.arc(lastPoint.x, lastPoint.y, drawSize / 2, 0, Math.PI * 2);
+    ctx.fillStyle = drawColor;
+    ctx.fill();
+  }
+
+  function moveDraw(e) {
+    e.preventDefault();
+    if (!drawing) return;
+    const point = getCanvasPos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastPoint.x, lastPoint.y);
+    ctx.lineTo(point.x, point.y);
+    ctx.strokeStyle = drawColor;
+    ctx.lineWidth = drawSize;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+    lastPoint = point;
+  }
+
+  function endDraw(e) {
+    e.preventDefault();
+    drawing = false;
+    lastPoint = null;
+  }
+
+  // Mouse events
+  drawCanvas.addEventListener('mousedown', startDraw);
+  drawCanvas.addEventListener('mousemove', moveDraw);
+  drawCanvas.addEventListener('mouseup', endDraw);
+  drawCanvas.addEventListener('mouseleave', endDraw);
+
+  // Touch events
+  drawCanvas.addEventListener('touchstart', startDraw, { passive: false });
+  drawCanvas.addEventListener('touchmove', moveDraw, { passive: false });
+  drawCanvas.addEventListener('touchend', endDraw, { passive: false });
+  drawCanvas.addEventListener('touchcancel', endDraw, { passive: false });
+
+  // Color selection
+  colorBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      colorBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      drawColor = btn.dataset.color;
+    });
+  });
+
+  // Brush size
+  brushSize.addEventListener('input', () => {
+    drawSize = parseInt(brushSize.value);
+  });
+
+  // Buttons
+  drawBtn.addEventListener('click', openDrawing);
+  drawClose.addEventListener('click', closeDrawing);
+  drawUndo.addEventListener('click', undo);
+  drawClear.addEventListener('click', () => {
+    saveState();
+    clearCanvas();
+  });
+
+  drawSend.addEventListener('click', () => {
+    drawCanvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `drawing-${Date.now()}.png`, {
+        type: 'image/png',
+      });
+      uploadAndSend(file);
+      closeDrawing();
+    }, 'image/png');
+  });
+
+  // Handle resize
+  window.addEventListener('resize', () => {
+    if (drawOverlay.style.display !== 'none') {
+      // Save current drawing, resize, restore
+      const data = drawCanvas.toDataURL();
+      resizeCanvas();
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.src = data;
+    }
+  });
+
   // Fullscreen image viewer
   window.viewImage = function (src) {
     const viewer = document.createElement('div');

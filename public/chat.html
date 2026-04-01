@@ -44,6 +44,9 @@
       <div class="input-wrapper">
         <textarea id="message-input" placeholder="Type a message..." rows="1"></textarea>
       </div>
+      <button class="icon-btn draw-btn" id="draw-btn" title="Draw">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+      </button>
       <button class="icon-btn voice-btn" id="voice-btn" title="Record voice">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
       </button>
@@ -53,6 +56,46 @@
     </div>
 
     <input type="file" id="file-input" accept="image/*,video/*,audio/*,.pdf,.doc,.docx" style="display:none">
+
+    <!-- Drawing canvas overlay -->
+    <div class="draw-overlay" id="draw-overlay" style="display:none">
+      <div class="draw-header">
+        <button class="draw-close" id="draw-close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <span class="draw-title">Draw</span>
+        <button class="draw-send" id="draw-send">Send</button>
+      </div>
+      <div class="draw-canvas-wrap" id="draw-canvas-wrap">
+        <canvas id="draw-canvas"></canvas>
+      </div>
+      <div class="draw-toolbar">
+        <div class="draw-colors" id="draw-colors">
+          <button class="color-btn active" data-color="#1a1a2e" style="background:#1a1a2e"></button>
+          <button class="color-btn" data-color="#e74c3c" style="background:#e74c3c"></button>
+          <button class="color-btn" data-color="#e67e22" style="background:#e67e22"></button>
+          <button class="color-btn" data-color="#f1c40f" style="background:#f1c40f"></button>
+          <button class="color-btn" data-color="#2ecc71" style="background:#2ecc71"></button>
+          <button class="color-btn" data-color="#3498db" style="background:#3498db"></button>
+          <button class="color-btn" data-color="#9b59b6" style="background:#9b59b6"></button>
+          <button class="color-btn" data-color="#e91e90" style="background:#e91e90"></button>
+          <button class="color-btn" data-color="#ffffff" style="background:#ffffff"></button>
+        </div>
+        <div class="draw-size">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><circle cx="12" cy="12" r="4"/></svg>
+          <input type="range" id="brush-size" min="1" max="30" value="4">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><circle cx="12" cy="12" r="10"/></svg>
+        </div>
+        <div class="draw-actions">
+          <button class="draw-action-btn" id="draw-undo" title="Undo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 105.64-11.36L1 10"/></svg>
+          </button>
+          <button class="draw-action-btn" id="draw-clear" title="Clear">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
