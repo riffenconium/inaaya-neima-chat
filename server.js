@@ -167,4 +167,7 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Inaaya & Neima chat running on port ${PORT}`);
+  console.log(`Data directory: ${DATA_DIR}`);
+  const count = db.prepare('SELECT COUNT(*) as c FROM messages').get();
+  console.log(`Messages in database: ${count.c}`);
 });
