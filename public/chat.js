@@ -162,24 +162,45 @@
     }
   }
 
+  function getSupportedMime() {
+    const types = [
+      'audio/webm;codecs=opus',
+      'audio/webm',
+      'audio/mp4',
+      'audio/ogg;codecs=opus',
+      'audio/ogg',
+    ];
+    for (const t of types) {
+      if (MediaRecorder.isTypeSupported(t)) return t;
+    }
+    return '';
+  }
+
   function startRecording() {
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => {
         audioChunks = [];
-        mediaRecorder = new MediaRecorder(stream);
+        const mimeType = getSupportedMime();
+        const options = mimeType ? { mimeType } : {};
+        mediaRecorder = new MediaRecorder(stream, options);
+        const actualMime = mediaRecorder.mimeType || mimeType || 'audio/webm';
+        const ext = actualMime.includes('mp4') ? 'mp4' : actualMime.includes('ogg') ? 'ogg' : 'webm';
 
-        mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        };
         mediaRecorder.onstop = () => {
           stream.getTracks().forEach((t) => t.stop());
-          const blob = new Blob(audioChunks, { type: 'audio/webm' });
-          const file = new File([blob], `voice-${Date.now()}.webm`, {
-            type: 'audio/webm',
+          if (audioChunks.length === 0) return;
+          const blob = new Blob(audioChunks, { type: actualMime });
+          const file = new File([blob], `voice-${Date.now()}.${ext}`, {
+            type: actualMime,
           });
           uploadAndSend(file);
         };
 
-        mediaRecorder.start();
+        mediaRecorder.start(500);
         voiceBtn.classList.add('recording');
 
         // Show timer
